@@ -6,6 +6,8 @@ from the previous milestone release.
 
 UNRELEASED
 ----------
+* Adding enum support to the class carpenter
+
 * About half of the code in test-utils has been moved to a new module ``node-driver``,
   and the test scope modules are now located in a ``testing`` directory.
 
