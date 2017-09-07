@@ -89,4 +89,14 @@ public class CordformNode implements NodeDefinition {
     public void bftReplicaId(Integer id) {
         config = config.withValue("bftSMaRt", ConfigValueFactory.fromMap(Collections.singletonMap("replicaId", id)));
     }
+
+    /**
+     * Set the path to a file with optional properties, which are appended to the generated node.conf file.
+     *
+     * @param configFile The file path.
+     */
+    public void configFile(String configFile) {
+        config = config.withValue("configFile", ConfigValueFactory.fromAnyRef(configFile));
+    }
+
 }
