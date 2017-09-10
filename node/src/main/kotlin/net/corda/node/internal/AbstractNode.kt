@@ -492,9 +492,7 @@ abstract class AbstractNode(open val configuration: NodeConfiguration,
         return getNamesOfSubclassesOf(type.java)
                 .mapNotNull { loadClass(it, type) }
                 .filterNot { isAbstract(it.modifiers) }
-                .map {
-                    it.defaultOrNewInstance()
-                }
+                .map { it.defaultOrNewInstance() }
     }
 
     private fun makeVaultObservers() {
