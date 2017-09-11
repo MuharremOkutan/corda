@@ -81,7 +81,7 @@ class DeserializationInput(internal val serializerFactory: SerializerFactory) : 
         } catch(nse: NotSerializableException) {
             throw nse
         } catch(t: Throwable) {
-            throw NotSerializableException("Unexpected throwable: ${t.message} ${t.getStackTraceAsString()}")
+            throw NotSerializableException("Unexpected throwable: ${t.message} ${t.getStackTraceAsString()}. Path in the graph:\n" + prettyPrint())
         } finally {
             objectHistory.clear()
         }
@@ -115,11 +115,13 @@ class DeserializationInput(internal val serializerFactory: SerializerFactory) : 
                 val objectIndex = (obj.described as UnsignedInteger).toInt()
                 if (objectIndex !in 0..objectHistory.size)
                     throw NotSerializableException("Retrieval of existing reference failed. Requested index $objectIndex " +
-                            "is outside of the bounds for the list of size: ${objectHistory.size}")
+                            "is outside of the bounds for the list of size: ${objectHistory.size}." +
+                            " Path in the graph:\n" + prettyPrint())
 
                 val objectRetrieved = objectHistory[objectIndex]
                 if (!objectRetrieved::class.java.isSubClassOf(type.asClass()!!))
-                    throw NotSerializableException("Existing reference type mismatch. Expected: '$type', found: '${objectRetrieved::class.java}'")
+                    throw NotSerializableException("Existing reference type mismatch. Expected: '$type', found: '${objectRetrieved::class.java}'." +
+                            " Path in the graph:\n" + prettyPrint())
                 objectRetrieved
             } else {
                 val objectRead = when (obj) {
@@ -128,7 +130,7 @@ class DeserializationInput(internal val serializerFactory: SerializerFactory) : 
                         val serializer = serializerFactory.get(obj.descriptor, schema)
                         if (SerializerFactory.AnyType != type && serializer.type != type && with(serializer.type) { !isSubClassOf(type) && !materiallyEquivalentTo(type) })
                             throw NotSerializableException("Described type with descriptor ${obj.descriptor} was " +
-                                    "expected to be of type $type but was ${serializer.type}")
+                                    "expected to be of type $type but was ${serializer.type}. Path in the graph:\n" + prettyPrint())
                         serializer.readObject(obj.described, schema, this)
                     }
                     is Binary -> obj.array

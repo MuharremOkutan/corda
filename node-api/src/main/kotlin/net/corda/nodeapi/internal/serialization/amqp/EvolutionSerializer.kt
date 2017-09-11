@@ -124,7 +124,7 @@ class EvolutionSerializer(
     override fun readObject(obj: Any, schema: Schema, input: DeserializationInput): Any {
         if (obj !is List<*>) throw NotSerializableException("Body of described type is unexpected $obj")
 
-        return construct(readers.map { it?.readProperty(obj, schema, input) })
+        return construct(readers.map { it?.readProperty(obj, schema, input) }, input)
     }
 }
 

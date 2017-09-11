@@ -10,12 +10,12 @@ import java.lang.reflect.Type
 import kotlin.reflect.jvm.javaConstructor
 
 /**
- * Responsible for serializing and deserializing a regular object instance via a series of properties (matched with a constructor).
+ * Responsible for serializing and de-serializing a regular object instance via a series of properties (matched with a constructor).
  */
 open class ObjectSerializer(val clazz: Type, factory: SerializerFactory) : AMQPSerializer<Any> {
     override val type: Type get() = clazz
     open val kotlinConstructor = constructorForDeserialization(clazz)
-    val javaConstructor by lazy { kotlinConstructor?.javaConstructor }
+    private val javaConstructor by lazy { kotlinConstructor?.javaConstructor }
 
     private val logger = loggerFor<ObjectSerializer>()
 
@@ -25,7 +25,7 @@ open class ObjectSerializer(val clazz: Type, factory: SerializerFactory) : AMQPS
 
     private val typeName = nameForType(clazz)
 
-    override val typeDescriptor = Symbol.valueOf("$DESCRIPTOR_DOMAIN:${fingerprintForType(type, factory)}")
+    override val typeDescriptor: Symbol = Symbol.valueOf("$DESCRIPTOR_DOMAIN:${fingerprintForType(clazz, factory)}")
     private val interfaces = interfacesForSerialization(clazz, factory) // We restrict to only those annotated or whitelisted
 
     open internal val typeNotation: TypeNotation by lazy { CompositeType(typeName, null, generateProvides(), Descriptor(typeDescriptor), generateFields()) }
@@ -55,10 +55,10 @@ open class ObjectSerializer(val clazz: Type, factory: SerializerFactory) : AMQPS
 
     override fun readObject(obj: Any, schema: Schema, input: DeserializationInput): Any = input.track(clazz.typeName) {
         if (obj is List<*>) {
-            if (obj.size > propertySerializers.size) throw NotSerializableException("Too many properties in described type $typeName")
+            if (obj.size > propertySerializers.size) throw NotSerializableException("Too many properties in described type $typeName. Path in the graph:\n" + input.prettyPrint())
             val params = obj.zip(propertySerializers).map { it.second.readProperty(it.first, schema, input) }
-            construct(params)
-        } else throw NotSerializableException("Body of described type is unexpected $obj")
+            construct(params, input)
+        } else throw NotSerializableException("Body of described type is unexpected $obj. Path in the graph:\n" + input.prettyPrint())
     }
 
     private fun generateFields(): List<Field> {
@@ -67,12 +67,12 @@ open class ObjectSerializer(val clazz: Type, factory: SerializerFactory) : AMQPS
 
     private fun generateProvides(): List<String> = interfaces.map { nameForType(it) }
 
-    fun construct(properties: List<Any?>): Any {
+    fun construct(properties: List<Any?>, graphTracking: SerializationGraphTracking): Any {
 
         logger.debug { "Calling constructor: '$javaConstructor' with properties '$properties'" }
 
         return javaConstructor?.newInstance(*properties.toTypedArray()) ?:
-                throw NotSerializableException("Attempt to deserialize an interface: $clazz. Serialized form is invalid.")
+                throw NotSerializableException("Attempt to deserialize an interface: $clazz." +
+                        " Serialized form is invalid. Path in the graph:\n" + graphTracking.prettyPrint())
     }
-
 }
