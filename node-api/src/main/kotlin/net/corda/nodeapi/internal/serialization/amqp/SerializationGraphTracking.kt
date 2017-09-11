@@ -21,10 +21,10 @@ open class SerializationGraphTracking {
         }
     }
 
-    fun prettyPrint(frameFormatFn: (StringBuilder, Int, String) -> Unit = this::multiLineFormatFrame): String {
+    fun prettyPrint(frameFormatFn: StringBuilder.(Int, String) -> Unit = this::multiLineFormatFrame): String {
         val buffer = StringBuilder()
         for((index, value) in serializationStack.withIndex()) {
-            frameFormatFn(buffer, index, value)
+            buffer.frameFormatFn(index, value)
         }
         return buffer.toString()
     }
