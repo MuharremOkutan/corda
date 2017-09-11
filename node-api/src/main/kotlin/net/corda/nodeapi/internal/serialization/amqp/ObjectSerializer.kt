@@ -53,11 +53,11 @@ open class ObjectSerializer(val clazz: Type, factory: SerializerFactory) : AMQPS
         }
     }
 
-    override fun readObject(obj: Any, schema: Schema, input: DeserializationInput): Any {
+    override fun readObject(obj: Any, schema: Schema, input: DeserializationInput): Any = input.track(clazz.typeName) {
         if (obj is List<*>) {
             if (obj.size > propertySerializers.size) throw NotSerializableException("Too many properties in described type $typeName")
             val params = obj.zip(propertySerializers).map { it.second.readProperty(it.first, schema, input) }
-            return construct(params)
+            construct(params)
         } else throw NotSerializableException("Body of described type is unexpected $obj")
     }
 
