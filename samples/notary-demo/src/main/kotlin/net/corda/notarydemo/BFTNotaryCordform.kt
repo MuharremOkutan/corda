@@ -22,6 +22,8 @@ fun main(args: Array<String>) = BFTNotaryCordform.runNodes()
 private val clusterSize = 4 // Minimum size that tolerates a faulty replica.
 private val notaryNames = createNotaryNames(clusterSize)
 
+// This is not the intended final design for how to use CordformDefinition, please treat this as experimental and DO
+// NOT use this as a design to copy.
 object BFTNotaryCordform : CordformDefinition("build" / "notary-demo-nodes", notaryNames[0]) {
     private val clusterName = getX500Name(O = "BFT", OU = "corda", L = "Zurich", C = "CH")
     private val advertisedService = ServiceInfo(BFTNonValidatingNotaryService.type, clusterName)
