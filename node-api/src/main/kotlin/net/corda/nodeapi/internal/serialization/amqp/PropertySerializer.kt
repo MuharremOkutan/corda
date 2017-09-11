@@ -82,11 +82,11 @@ sealed class PropertySerializer(val name: String, val readMethod: Method?, val r
             }
         }
 
-        override fun readProperty(obj: Any?, schema: Schema, input: DeserializationInput): Any? {
-            return input.readObjectOrNull(obj, schema, resolvedType)
+        override fun readProperty(obj: Any?, schema: Schema, input: DeserializationInput): Any? = input.track(resolvedType.typeName) {
+            input.readObjectOrNull(obj, schema, resolvedType)
         }
 
-        override fun writeProperty(obj: Any?, data: Data, output: SerializationOutput) {
+        override fun writeProperty(obj: Any?, data: Data, output: SerializationOutput) = output.track(resolvedType.typeName) {
             output.writeObjectOrNull(readMethod!!.invoke(obj), data, resolvedType)
         }
     }
